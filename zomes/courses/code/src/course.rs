@@ -5,7 +5,7 @@ use hdk::AGENT_ADDRESS;
 pub struct Course {
     title: String,
     teacher_address: Address,
-    modules: Vec<Address>,
+    modules: Vec<Address>, // Implicit link, as relationship with module
     timestamp: u64,
 }
 
@@ -51,6 +51,7 @@ pub fn entry_definition() -> ValidatingEntryType {
         validation: | validation_data: hdk::EntryValidationData<Course>| {
             match validation_data{
                 EntryValidationData::Create { entry, validation_data } => {
+                    // validation_data.sources() = list of authors that have signed this entry
                     if !validation_data.sources().contains(&entry.teacher_address) {
                         return Err(String::from("Only the teacher can create their courses"));
                     }
@@ -106,7 +107,6 @@ pub fn update(
     course_address: &Address,
 ) -> ZomeApiResult<Address> {
     let course: Course = hdk::utils::get_as_type(course_address.clone())?;
-
     let new_version_course = Course::from(
         title,
         course.teacher_address,
@@ -114,6 +114,5 @@ pub fn update(
         modules_addresses,
     );
     let new_version_course_entry = new_version_course.entry();
-
     hdk::update_entry(new_version_course_entry, course_address)
 }
